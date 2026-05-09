@@ -1,0 +1,22 @@
+version: '3'
+
+services:
+  nginx:
+    image: jonasal/nginx-certbot:latest
+    restart: unless-stopped
+    environment:
+      # Email address used for Let's Encrypt registration
+      - CERTBOT_EMAIL=admin@neoteric.naija.ee
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      # Store certificates in a named volume so they persist across container restarts
+      - nginx_secrets:/etc/letsencrypt
+      # Mount the custom Nginx configuration
+      - ./nginx/user_conf.d:/etc/nginx/user_conf.d
+      # Mount the current directory containing index.html to Nginx's web root
+      - ./:/usr/share/nginx/html
+
+volumes:
+  nginx_secrets:
