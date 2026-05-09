@@ -14,7 +14,7 @@ jobs:
       - name: Execute deployment on server
         uses: appleboy/ssh-action@v1.0.3
         with:
-          host: ${{ vars.NEO_SERVER }}
+          host: ${{ secrets.NEO_SERVER_KEY }}
           username: ${{ vars.SERVER_USER }}
           key: ${{ vars.SERVER_SSH_KEY }}
           script: |
