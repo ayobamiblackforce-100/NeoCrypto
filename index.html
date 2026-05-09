@@ -1,0 +1,1658 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>SwiftCrypto — Buy USDT · BTC · ETH</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;600;700;800&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
+
+<style>
+/* ── RESET & BASE ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+:root {
+  --bg: #050508;
+  --surface: #0d0d14;
+  --surface2: #13131e;
+  --border: rgba(255,255,255,0.07);
+  --text: #f0f0f8;
+  --muted: #6b6b82;
+  --accent: #00e5b4;
+  --accent2: #7c4dff;
+  --btc: #f7931a;
+  --eth: #627eea;
+  --usdt: #26a17b;
+  --danger: #ff4d6d;
+  --warn: #ffa500;
+  --success: #00e5b4;
+  --font-head: 'Syne', sans-serif;
+  --font-mono: 'DM Mono', monospace;
+  --r: 16px;
+  --r-sm: 10px;
+}
+
+html { font-size: 16px; scroll-behavior: smooth; }
+body {
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-head);
+  min-height: 100vh;
+  overflow-x: hidden;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* ── NOISE TEXTURE OVERLAY ── */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.03'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 9999;
+  opacity: 0.4;
+}
+
+/* ── GLOW ORBS ── */
+.orb {
+  position: fixed;
+  border-radius: 50%;
+  filter: blur(120px);
+  pointer-events: none;
+  z-index: 0;
+  animation: orbFloat 8s ease-in-out infinite;
+}
+.orb1 { width: 400px; height: 400px; background: rgba(0,229,180,0.08); top: -100px; right: -100px; animation-delay: 0s; }
+.orb2 { width: 300px; height: 300px; background: rgba(124,77,255,0.07); bottom: 100px; left: -80px; animation-delay: -4s; }
+
+@keyframes orbFloat {
+  0%,100% { transform: translateY(0px) scale(1); }
+  50% { transform: translateY(-30px) scale(1.05); }
+}
+
+/* ── LAYOUT ── */
+.wrap { max-width: 480px; margin: 0 auto; padding: 0 16px 40px; position: relative; z-index: 1; }
+
+/* ── HEADER ── */
+header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 0 24px;
+  animation: fadeDown 0.6s ease both;
+}
+.logo {
+  font-size: 1.25rem;
+  font-weight: 800;
+  letter-spacing: -0.5px;
+}
+.logo span { color: var(--accent); }
+.live-dot {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  color: var(--muted);
+}
+.dot {
+  width: 7px; height: 7px;
+  border-radius: 50%;
+  background: var(--accent);
+  box-shadow: 0 0 8px var(--accent);
+  animation: pulse 1.5s ease-in-out infinite;
+}
+@keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:0.5;transform:scale(0.8)} }
+
+/* ── SECTION LABEL ── */
+.section-label {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--muted);
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  margin-bottom: 12px;
+}
+
+/* ── PRICE CARDS ── */
+.prices-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-bottom: 32px;
+  animation: fadeUp 0.6s ease 0.1s both;
+}
+
+.price-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 16px 18px;
+  cursor: pointer;
+  transition: border-color 0.25s, transform 0.2s, box-shadow 0.25s;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+.price-card:hover { transform: translateY(-2px); }
+.price-card.selected { transform: translateY(-2px); }
+.price-card.btc.selected { border-color: var(--btc); box-shadow: 0 0 24px rgba(247,147,26,0.2); }
+.price-card.eth.selected { border-color: var(--eth); box-shadow: 0 0 24px rgba(98,126,234,0.2); }
+.price-card.usdt.selected { border-color: var(--usdt); box-shadow: 0 0 24px rgba(38,161,123,0.2); }
+
+.coin-icon {
+  width: 44px; height: 44px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 1.2rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+.btc .coin-icon { background: rgba(247,147,26,0.15); color: var(--btc); }
+.eth .coin-icon { background: rgba(98,126,234,0.15); color: var(--eth); }
+.usdt .coin-icon { background: rgba(38,161,123,0.15); color: var(--usdt); }
+.card-left { flex: 1; min-width: 0; }
+.card-right { text-align: right; flex-shrink: 0; }
+
+.coin-sym {
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  color: #a0a0bc;
+  font-weight: 500;
+  margin-bottom: 2px;
+}
+.coin-name {
+  font-size: 0.7rem;
+  color: #666688;
+  font-family: var(--font-mono);
+}
+.coin-usd {
+  font-family: var(--font-mono);
+  font-size: 1.15rem;
+  font-weight: 700;
+  color: #ffffff;
+  line-height: 1.2;
+  letter-spacing: -0.5px;
+}
+.coin-ngn {
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: #9090b0;
+  margin-top: 3px;
+}
+.coin-change {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 6px;
+  display: inline-block;
+  margin-top: 4px;
+}
+.coin-change.up { color: #00ffcc; background: rgba(0,229,180,0.15); }
+.coin-change.dn { color: #ff6b84; background: rgba(255,77,109,0.15); }
+
+/* shimmer skeleton */
+.shimmer {
+  background: linear-gradient(90deg, var(--surface) 25%, var(--surface2) 50%, var(--surface) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+  border-radius: 4px;
+  height: 12px;
+}
+@keyframes shimmer { 0%{background-position:200% 0} 100%{background-position:-200% 0} }
+
+/* ── TRADE FORM ── */
+.form-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 22px 20px;
+  margin-bottom: 32px;
+  animation: fadeUp 0.6s ease 0.2s both;
+}
+
+.form-title {
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-bottom: 20px;
+}
+
+.field { margin-bottom: 16px; }
+.field label {
+  display: block;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  color: var(--muted);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.input-wrap {
+  position: relative;
+}
+.input-wrap input, .input-wrap select {
+  width: 100%;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: 14px 16px;
+  color: var(--text);
+  font-family: var(--font-mono);
+  font-size: 0.95rem;
+  outline: none;
+  transition: border-color 0.2s;
+  -webkit-appearance: none;
+}
+.input-wrap input:focus, .input-wrap select:focus {
+  border-color: var(--accent);
+  box-shadow: 0 0 0 3px rgba(0,229,180,0.08);
+}
+.input-wrap input::placeholder { color: var(--muted); }
+.input-suffix {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--muted);
+  pointer-events: none;
+}
+
+/* coin selector tabs */
+.coin-tabs {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 8px;
+  margin-bottom: 16px;
+}
+.coin-tab {
+  padding: 10px 6px;
+  border-radius: var(--r-sm);
+  border: 1px solid var(--border);
+  background: var(--surface2);
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  text-align: center;
+  transition: all 0.2s;
+}
+.coin-tab.active-btc { border-color: var(--btc); color: var(--btc); background: rgba(247,147,26,0.08); }
+.coin-tab.active-eth { border-color: var(--eth); color: var(--eth); background: rgba(98,126,234,0.08); }
+.coin-tab.active-usdt { border-color: var(--usdt); color: var(--usdt); background: rgba(38,161,123,0.08); }
+
+/* summary box */
+.summary {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: 14px 16px;
+  margin: 16px 0;
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.summary-row { display: flex; justify-content: space-between; align-items: center; }
+.summary-row .k { color: var(--muted); }
+.summary-row .v { color: var(--text); font-weight: 500; }
+.summary-row .v.hi { color: var(--accent); }
+.summary-divider { height: 1px; background: var(--border); margin: 2px 0; }
+
+/* ── BUTTON ── */
+.btn {
+  width: 100%;
+  padding: 16px;
+  border-radius: var(--r-sm);
+  border: none;
+  font-family: var(--font-head);
+  font-weight: 700;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s;
+  position: relative;
+  overflow: hidden;
+}
+.btn-primary {
+  background: linear-gradient(135deg, var(--accent), #00b890);
+  color: #000;
+  box-shadow: 0 4px 24px rgba(0,229,180,0.25);
+}
+.btn-primary:hover { transform: translateY(-1px); box-shadow: 0 6px 32px rgba(0,229,180,0.35); }
+.btn-primary:active { transform: translateY(0); }
+.btn-primary::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.15), transparent);
+  border-radius: var(--r-sm);
+}
+.btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ── MODAL OVERLAY ── */
+.overlay {
+  display: none;
+  position: fixed;
+  inset: 0;
+  background: rgba(5,5,8,0.85);
+  backdrop-filter: blur(8px);
+  z-index: 1000;
+  align-items: flex-end;
+  justify-content: center;
+}
+.overlay.open { display: flex; animation: fadeIn 0.25s ease; }
+@keyframes fadeIn { from{opacity:0} to{opacity:1} }
+
+.modal {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 24px 24px 0 0;
+  width: 100%;
+  max-width: 480px;
+  padding: 28px 24px 40px;
+  animation: slideUp 0.3s cubic-bezier(0.34,1.56,0.64,1);
+  max-height: 90vh;
+  overflow-y: auto;
+}
+@keyframes slideUp { from{transform:translateY(100%)} to{transform:translateY(0)} }
+
+.modal-handle {
+  width: 36px; height: 4px;
+  background: var(--border);
+  border-radius: 2px;
+  margin: 0 auto 20px;
+}
+.modal-title { font-size: 1.1rem; font-weight: 800; margin-bottom: 6px; }
+.modal-sub { font-family: var(--font-mono); font-size: 0.72rem; color: var(--muted); margin-bottom: 22px; }
+
+/* bank details */
+.bank-box {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 18px;
+  margin-bottom: 20px;
+}
+.bank-box .bank-name {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--muted);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-bottom: 10px;
+}
+.bank-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+.bank-row:last-child { margin-bottom: 0; }
+.bank-row .bk { font-family: var(--font-mono); font-size: 0.75rem; color: var(--muted); }
+.bank-row .bv { font-family: var(--font-mono); font-size: 0.85rem; font-weight: 500; color: var(--text); }
+.copy-btn {
+  background: rgba(255,255,255,0.05);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  padding: 4px 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+.copy-btn:hover { color: var(--accent); border-color: var(--accent); }
+.copy-btn.copied { color: var(--accent); border-color: var(--accent); }
+
+.amount-to-pay {
+  background: linear-gradient(135deg, rgba(0,229,180,0.08), rgba(0,229,180,0.03));
+  border: 1px solid rgba(0,229,180,0.2);
+  border-radius: var(--r-sm);
+  padding: 14px 18px;
+  margin-bottom: 20px;
+  text-align: center;
+}
+.amount-to-pay .label { font-family: var(--font-mono); font-size: 0.65rem; color: var(--muted); margin-bottom: 4px; }
+.amount-to-pay .amount { font-family: var(--font-mono); font-size: 1.6rem; font-weight: 500; color: var(--accent); }
+.amount-to-pay .amount-usd { font-family: var(--font-mono); font-size: 0.72rem; color: var(--muted); margin-top: 4px; }
+
+.warning-box {
+  background: rgba(255,165,0,0.06);
+  border: 1px solid rgba(255,165,0,0.2);
+  border-radius: var(--r-sm);
+  padding: 12px 14px;
+  margin-bottom: 20px;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--warn);
+  line-height: 1.5;
+}
+
+/* status badge */
+.status-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 100px;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 500;
+}
+.status-pending { background: rgba(255,165,0,0.1); color: var(--warn); border: 1px solid rgba(255,165,0,0.2); }
+.status-success { background: rgba(0,229,180,0.1); color: var(--success); border: 1px solid rgba(0,229,180,0.2); }
+
+/* ── ORDERS SECTION ── */
+.orders-section {
+  animation: fadeUp 0.6s ease 0.3s both;
+}
+
+.order-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 16px 18px;
+  margin-bottom: 10px;
+  transition: border-color 0.2s;
+}
+.order-card:hover { border-color: rgba(255,255,255,0.12); }
+.order-top {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 10px;
+}
+.order-coin { font-weight: 700; font-size: 0.95rem; }
+.order-meta {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  color: var(--muted);
+  margin-top: 3px;
+}
+.order-amounts { font-family: var(--font-mono); font-size: 0.78rem; color: var(--muted); text-align: right; }
+.order-amounts .hi { color: var(--text); font-size: 0.9rem; }
+
+/* ── TOAST ── */
+.toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(100px);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 100px;
+  padding: 12px 20px;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--text);
+  z-index: 9000;
+  transition: transform 0.3s cubic-bezier(0.34,1.56,0.64,1);
+  white-space: nowrap;
+  box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+}
+.toast.show { transform: translateX(-50%) translateY(0); }
+.toast.success { border-color: rgba(0,229,180,0.3); color: var(--accent); }
+.toast.error { border-color: rgba(255,77,109,0.3); color: var(--danger); }
+
+/* ── ANIMATIONS ── */
+@keyframes fadeUp { from{opacity:0;transform:translateY(16px)} to{opacity:1;transform:translateY(0)} }
+@keyframes fadeDown { from{opacity:0;transform:translateY(-10px)} to{opacity:1;transform:translateY(0)} }
+
+/* ── LOADING SPINNER ── */
+.spinner {
+  width: 16px; height: 16px;
+  border: 2px solid rgba(0,0,0,0.2);
+  border-top-color: #000;
+  border-radius: 50%;
+  display: inline-block;
+  animation: spin 0.6s linear infinite;
+  vertical-align: middle;
+  margin-right: 6px;
+}
+@keyframes spin { to{transform:rotate(360deg)} }
+
+/* ── EMPTY STATE ── */
+.empty {
+  text-align: center;
+  padding: 32px 20px;
+  color: var(--muted);
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+}
+.empty-icon { font-size: 2rem; margin-bottom: 12px; opacity: 0.4; }
+
+/* ── RATE BAR ── */
+.rate-bar {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: 10px 16px;
+  margin-bottom: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  animation: fadeUp 0.6s ease 0.05s both;
+}
+.rate-bar .k { color: var(--muted); }
+.rate-bar .v { color: var(--accent); font-weight: 500; }
+.rate-bar .updated { color: var(--muted); font-size: 0.6rem; }
+
+/* scrollbar */
+::-webkit-scrollbar { width: 4px; }
+::-webkit-scrollbar-track { background: transparent; }
+::-webkit-scrollbar-thumb { background: var(--border); border-radius: 2px; }
+
+/* ── SELL SECTION BLOCKS ── */
+.sell-wallet-label {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  font-weight: 600;
+  color: #ff6b84;
+  letter-spacing: 0.5px;
+  margin-bottom: 10px;
+}
+.sell-wallet-block {
+  margin-bottom: 18px;
+}
+.sell-bank-block {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 16px;
+  margin-bottom: 16px;
+}
+.sell-bank-block .sell-wallet-label {
+  color: #a0a0bc;
+  margin-bottom: 14px;
+}
+.sell-bank-block .field {
+  margin-bottom: 12px;
+}
+.sell-bank-block .field:last-child {
+  margin-bottom: 0;
+}
+
+/* ── BUY / SELL TOGGLE ── */
+.mode-toggle {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--r);
+  padding: 4px;
+  margin-bottom: 22px;
+  gap: 4px;
+}
+.mode-btn {
+  padding: 12px;
+  border-radius: 10px;
+  border: none;
+  font-family: var(--font-head);
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: transparent;
+  color: var(--muted);
+}
+.mode-btn.active-buy  { background: linear-gradient(135deg,var(--accent),#00b890); color:#000; box-shadow:0 2px 12px rgba(0,229,180,0.25); }
+.mode-btn.active-sell { background: linear-gradient(135deg,#ff4d6d,#c9003a); color:#fff; box-shadow:0 2px 12px rgba(255,77,109,0.25); }
+
+/* sell wallet box */
+.wallet-display {
+  background: var(--surface2);
+  border: 1px solid var(--border);
+  border-radius: var(--r-sm);
+  padding: 14px 16px;
+  margin-bottom: 16px;
+}
+.wallet-display .wd-label {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  color: var(--muted);
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+.wallet-display .wd-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+}
+.wallet-display .wd-addr {
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--text);
+  word-break: break-all;
+  flex: 1;
+}
+.wallet-display .wd-coin {
+  font-family: var(--font-mono);
+  font-size: 0.68rem;
+  font-weight: 600;
+  padding: 3px 8px;
+  border-radius: 6px;
+  flex-shrink: 0;
+}
+.wd-coin.btc  { background:rgba(247,147,26,0.15);  color:var(--btc); }
+.wd-coin.eth  { background:rgba(98,126,234,0.15);   color:var(--eth); }
+.wd-coin.usdt { background:rgba(38,161,123,0.15);   color:var(--usdt);}
+
+/* sell modal bank input */
+.sell-info-box {
+  background: linear-gradient(135deg, rgba(255,77,109,0.07), rgba(255,77,109,0.03));
+  border: 1px solid rgba(255,77,109,0.2);
+  border-radius: var(--r-sm);
+  padding: 14px 18px;
+  margin-bottom: 20px;
+  text-align: center;
+}
+.sell-info-box .label { font-family:var(--font-mono); font-size:0.65rem; color:var(--muted); margin-bottom:4px; }
+.sell-info-box .amount { font-family:var(--font-mono); font-size:1.6rem; font-weight:500; color:#ff6b84; }
+.sell-info-box .amount-sub { font-family:var(--font-mono); font-size:0.72rem; color:var(--muted); margin-top:4px; }
+
+.sell-warning {
+  background: rgba(255,165,0,0.06);
+  border: 1px solid rgba(255,165,0,0.2);
+  border-radius: var(--r-sm);
+  padding: 12px 14px;
+  margin-bottom: 20px;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--warn);
+  line-height: 1.5;
+}
+
+.btn-sell {
+  background: linear-gradient(135deg, #ff4d6d, #c9003a);
+  color: #fff;
+  box-shadow: 0 4px 24px rgba(255,77,109,0.25);
+}
+.btn-sell:hover { transform:translateY(-1px); box-shadow:0 6px 32px rgba(255,77,109,0.35); }
+
+/* order card type badge */
+.order-type {
+  font-family: var(--font-mono);
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 1px;
+  padding: 2px 7px;
+  border-radius: 4px;
+  margin-left: 8px;
+  vertical-align: middle;
+}
+.type-buy  { background:rgba(0,229,180,0.12);  color:var(--accent); }
+.type-sell { background:rgba(255,77,109,0.12); color:#ff6b84; }
+</style>
+</head>
+<body>
+
+<div class="orb orb1"></div>
+<div class="orb orb2"></div>
+
+<div class="wrap">
+
+  <!-- HEADER -->
+  <header>
+    <div class="logo">Swift<span>Crypto</span></div>
+    <div class="live-dot">
+      <div class="dot"></div>
+      LIVE PRICES
+    </div>
+  </header>
+
+  <!-- RATE BAR -->
+  <div class="rate-bar">
+    <span><span class="k">USD/NGN — </span><span class="v" id="rate-display">Loading…</span></span>
+    <span class="updated" id="rate-updated"></span>
+  </div>
+
+  <!-- PRICE CARDS -->
+  <p class="section-label">Market Prices</p>
+  <div class="prices-grid" id="prices-grid">
+    <div class="price-card btc" onclick="selectCoin('BTC')">
+      <div class="coin-icon">₿</div>
+      <div class="card-left">
+        <div class="coin-sym">BTC</div>
+        <div class="coin-name">Bitcoin</div>
+      </div>
+      <div class="card-right">
+        <div class="coin-usd" id="btc-usd"><div class="shimmer" style="width:90px;height:16px"></div></div>
+        <div class="coin-ngn" id="btc-ngn"><div class="shimmer" style="width:70px;height:12px;margin-top:6px"></div></div>
+        <div id="btc-change"></div>
+      </div>
+    </div>
+    <div class="price-card eth" onclick="selectCoin('ETH')">
+      <div class="coin-icon">Ξ</div>
+      <div class="card-left">
+        <div class="coin-sym">ETH</div>
+        <div class="coin-name">Ethereum</div>
+      </div>
+      <div class="card-right">
+        <div class="coin-usd" id="eth-usd"><div class="shimmer" style="width:90px;height:16px"></div></div>
+        <div class="coin-ngn" id="eth-ngn"><div class="shimmer" style="width:70px;height:12px;margin-top:6px"></div></div>
+        <div id="eth-change"></div>
+      </div>
+    </div>
+    <div class="price-card usdt" onclick="selectCoin('USDT')">
+      <div class="coin-icon">₮</div>
+      <div class="card-left">
+        <div class="coin-sym">USDT</div>
+        <div class="coin-name">Tether</div>
+      </div>
+      <div class="card-right">
+        <div class="coin-usd" id="usdt-usd"><div class="shimmer" style="width:90px;height:16px"></div></div>
+        <div class="coin-ngn" id="usdt-ngn"><div class="shimmer" style="width:70px;height:12px;margin-top:6px"></div></div>
+        <div id="usdt-change"></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- TRADE FORM -->
+  <div class="form-card">
+
+    <!-- BUY / SELL TOGGLE -->
+    <div class="mode-toggle">
+      <button class="mode-btn active-buy" id="mode-buy" onclick="setMode('buy')">↓ Buy Crypto</button>
+      <button class="mode-btn" id="mode-sell" onclick="setMode('sell')">↑ Sell Crypto</button>
+    </div>
+
+    <!-- COIN TABS -->
+    <div class="field">
+      <label>Select Coin</label>
+      <div class="coin-tabs">
+        <div class="coin-tab active-btc" id="tab-BTC" onclick="selectCoin('BTC')">₿ BTC</div>
+        <div class="coin-tab" id="tab-ETH" onclick="selectCoin('ETH')">Ξ ETH</div>
+        <div class="coin-tab" id="tab-USDT" onclick="selectCoin('USDT')">₮ USDT</div>
+      </div>
+    </div>
+
+    <!-- SHARED FIELDS -->
+    <div class="field">
+      <label>Your Full Name</label>
+      <div class="input-wrap">
+        <input type="text" id="full-name" placeholder="e.g. Amaka Johnson" autocomplete="name">
+      </div>
+    </div>
+    <div class="field">
+      <label>Email Address</label>
+      <div class="input-wrap">
+        <input type="email" id="email" placeholder="you@example.com" autocomplete="email">
+      </div>
+    </div>
+
+    <!-- ══ BUY SECTION ══ -->
+    <div id="buy-section">
+      <div class="field">
+        <label>Your Wallet Address <span style="color:var(--muted);font-size:0.65rem">(where we'll send crypto)</span></label>
+        <div class="input-wrap">
+          <input type="text" id="wallet" placeholder="Paste your wallet address…">
+        </div>
+      </div>
+    </div>
+
+    <!-- ══ SELL SECTION ══ -->
+    <div id="sell-section" style="display:none">
+
+      <!-- Our receiving wallet -->
+      <div class="sell-wallet-block">
+        <div class="sell-wallet-label">📤 Send Crypto To Our Wallet</div>
+        <div class="wallet-display">
+          <div class="wd-label">SwiftCrypto Receiving Address</div>
+          <div class="wd-row">
+            <span class="wd-addr" id="our-wallet-addr">—</span>
+            <span class="wd-coin btc" id="our-wallet-coin">BTC</span>
+            <button class="copy-btn" onclick="copyOurWallet()">Copy</button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Customer bank for NGN payout -->
+      <div class="sell-bank-block">
+        <div class="sell-wallet-label">🏦 Your Bank (for NGN payout)</div>
+        <div class="field">
+          <label>Bank Name</label>
+          <div class="input-wrap">
+            <input type="text" id="sell-bank-name" placeholder="e.g. First Bank, GTBank…">
+          </div>
+        </div>
+        <div class="field">
+          <label>Account Number</label>
+          <div class="input-wrap">
+            <input type="number" id="sell-acct-num" placeholder="0123456789">
+          </div>
+        </div>
+        <div class="field">
+          <label>Account Name</label>
+          <div class="input-wrap">
+            <input type="text" id="sell-acct-name" placeholder="Name exactly as on account">
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- AMOUNT -->
+    <div class="field">
+      <label id="amount-label">Amount in USD</label>
+      <div class="input-wrap">
+        <input type="number" id="amount-usd" placeholder="Min $10" min="10" oninput="recalc()">
+        <span class="input-suffix" id="amount-suffix">USD</span>
+      </div>
+    </div>
+
+    <!-- LIVE SUMMARY -->
+    <div class="summary">
+      <div class="summary-row"><span class="k">Coin</span><span class="v" id="sum-coin">—</span></div>
+      <div class="summary-row"><span class="k">Rate</span><span class="v" id="sum-rate">—</span></div>
+      <div class="summary-divider"></div>
+      <div class="summary-row"><span class="k" id="sum-get-label">You Get</span><span class="v hi" id="sum-get">—</span></div>
+      <div class="summary-row"><span class="k" id="sum-pay-label">You Pay (NGN)</span><span class="v hi" id="sum-pay">—</span></div>
+    </div>
+
+    <button class="btn btn-primary" id="action-btn" onclick="openCheckout()">
+      Proceed to Checkout →
+    </button>
+  </div>
+
+  <!-- RECENT ORDERS -->
+  <div class="orders-section">
+    <p class="section-label">My Orders</p>
+    <div id="orders-list">
+      <div class="empty">
+        <div class="empty-icon">📭</div>
+        No orders yet. Make your first trade above!
+      </div>
+    </div>
+  </div>
+
+</div>
+
+<!-- BUY MODAL -->
+<div class="overlay" id="modal-overlay" onclick="handleOverlayClick(event)">
+  <div class="modal" id="modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Complete Payment</div>
+    <div class="modal-sub" id="modal-sub">Transfer exact amount to account below</div>
+
+    <div class="amount-to-pay">
+      <div class="label">TRANSFER EXACTLY</div>
+      <div class="amount" id="pay-amount">₦0</div>
+      <div class="amount-usd" id="pay-usd">≈ $0 USD</div>
+    </div>
+
+    <div class="bank-box">
+      <div class="bank-name">Bank Details — GTBank</div>
+      <div class="bank-row">
+        <span class="bk">Bank</span>
+        <span class="bv">Guaranty Trust Bank</span>
+      </div>
+      <div class="bank-row">
+        <span class="bk">Account Name</span>
+        <span class="bv">SwiftCrypto Ltd</span>
+      </div>
+      <div class="bank-row">
+        <span class="bk">Account No.</span>
+        <span class="bv" id="acct-num">0123456789</span>
+        <button class="copy-btn" id="copy-acct" onclick="copyAcct()">Copy</button>
+      </div>
+      <div class="bank-row">
+        <span class="bk">Sort Code</span>
+        <span class="bv">058-152487</span>
+      </div>
+    </div>
+
+    <div class="warning-box">
+      ⚠️ Send the EXACT amount shown. Include your email as transfer narration. Your order remains <strong>PENDING</strong> until payment is confirmed by our team (usually within 15 mins).
+    </div>
+
+    <button class="btn btn-primary" id="confirm-btn" onclick="confirmOrder()">
+      I've Made the Transfer ✓
+    </button>
+    <div style="height:10px"></div>
+    <button class="btn" style="background:var(--surface2);color:var(--muted);border:1px solid var(--border)" onclick="closeModal()">
+      Cancel
+    </button>
+  </div>
+</div>
+
+<!-- SELL MODAL -->
+<div class="overlay" id="sell-modal-overlay" onclick="handleSellOverlayClick(event)">
+  <div class="modal" id="sell-modal">
+    <div class="modal-handle"></div>
+    <div class="modal-title">Sell Crypto</div>
+    <div class="modal-sub" id="sell-modal-sub">Send crypto to our wallet, receive NGN</div>
+
+    <div class="sell-info-box">
+      <div class="label">YOU WILL RECEIVE</div>
+      <div class="amount" id="sell-receive-amount">₦0</div>
+      <div class="amount-sub" id="sell-receive-sub">≈ $0 USD · 0 BTC</div>
+    </div>
+
+    <!-- Our wallet for receiving crypto -->
+    <div class="bank-box" style="border-color:rgba(255,77,109,0.2)">
+      <div class="bank-name" style="color:#ff6b84">Send Crypto To This Wallet</div>
+      <div class="bank-row">
+        <span class="bk">Network</span>
+        <span class="bv" id="sell-network">—</span>
+      </div>
+      <div class="bank-row">
+        <span class="bk">Address</span>
+        <span class="bv" id="sell-wallet-display" style="font-size:0.7rem;word-break:break-all">—</span>
+        <button class="copy-btn" onclick="copySellWallet()">Copy</button>
+      </div>
+    </div>
+
+    <!-- Customer's bank for payout -->
+    <div class="bank-box">
+      <div class="bank-name">Payout Bank (yours)</div>
+      <div class="bank-row">
+        <span class="bk">Bank</span>
+        <span class="bv" id="sell-payout-bank">—</span>
+      </div>
+      <div class="bank-row">
+        <span class="bk">Account No.</span>
+        <span class="bv" id="sell-payout-acct">—</span>
+      </div>
+      <div class="bank-row">
+        <span class="bk">Account Name</span>
+        <span class="bv" id="sell-payout-name">—</span>
+      </div>
+    </div>
+
+    <div class="sell-warning">
+      ⚠️ Send EXACT amount to our wallet address above. Your NGN payout remains <strong>PENDING</strong> until we confirm receipt of the crypto (usually within 15 mins).
+    </div>
+
+    <button class="btn btn-sell" id="sell-confirm-btn" onclick="confirmSellOrder()">
+      I've Sent the Crypto ✓
+    </button>
+    <div style="height:10px"></div>
+    <button class="btn" style="background:var(--surface2);color:var(--muted);border:1px solid var(--border)" onclick="closeSellModal()">
+      Cancel
+    </button>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ═══════════════════════════════════════════════════════
+// CONFIG — UPDATE THESE
+// ═══════════════════════════════════════════════════════
+const CONFIG = {
+  supabase: {
+    url: 'YOUR_SUPABASE_URL',
+    anonKey: 'YOUR_SUPABASE_ANON_KEY',
+  },
+  slack: {
+    webhookUrl: 'YOUR_SLACK_WEBHOOK_URL', // e.g. https://hooks.slack.com/services/...
+  },
+  bank: {
+    accountNumber: '0123456789',
+    accountName: 'SwiftCrypto Ltd',
+    bankName: 'Guaranty Trust Bank',
+    sortCode: '058-152487',
+  },
+  // Markup on exchange rate (e.g. 1.03 = 3% above market)
+  rateMarkup: 1.03,
+};
+
+// ═══════════════════════════════════════════════════════
+// STATE
+// ═══════════════════════════════════════════════════════
+let prices = { BTC: 0, ETH: 0, USDT: 1 };
+let usdNgn = 1600; // fallback
+let selectedCoin = 'BTC';
+let tradeMode = 'buy'; // 'buy' | 'sell'
+let orders = JSON.parse(localStorage.getItem('sc_orders') || '[]');
+let currentOrderId = null;
+
+// Dummy wallets for receiving crypto (sell flow) — update these
+const OUR_WALLETS = {
+  BTC:  { address: '1A1zP1eP5QGefi2DMPTfTL5SLmv7Divf', network: 'Bitcoin (BTC)' },
+  ETH:  { address: '0x742d35Cc6634C0532925a3b844Bc454e4438f44e', network: 'Ethereum (ERC-20)' },
+  USDT: { address: '0x742d35Cc6634C0532925a3b844Bc454e4438f44e', network: 'Ethereum (ERC-20) / TRC-20' },
+};
+
+// ═══════════════════════════════════════════════════════
+// FETCH PRICES — WebSocket (Binance) + REST fallbacks
+// ═══════════════════════════════════════════════════════
+let ws = null;
+let wsConnected = false;
+
+function connectBinanceWS() {
+  // Binance WebSocket has no CORS restriction — it's a WS handshake, not HTTP
+  const stream = 'wss://stream.binance.com:9443/stream?streams=btcusdt@ticker/ethusdt@ticker';
+  try {
+    ws = new WebSocket(stream);
+
+    ws.onopen = () => {
+      wsConnected = true;
+      console.log('Binance WS connected');
+    };
+
+    ws.onmessage = (evt) => {
+      try {
+        const msg = JSON.parse(evt.data);
+        const t = msg.data;
+        if (!t) return;
+        const coin = t.s === 'BTCUSDT' ? 'btc' : t.s === 'ETHUSDT' ? 'eth' : null;
+        if (!coin) return;
+        const price = parseFloat(t.c);
+        const change = parseFloat(t.P);
+        prices[coin.toUpperCase()] = price;
+        updateCard(coin, price, change);
+        recalc();
+      } catch(e) {}
+    };
+
+    ws.onerror = () => {
+      wsConnected = false;
+      console.warn('Binance WS error — falling back to REST');
+      fallbackFetchPrices();
+    };
+
+    ws.onclose = () => {
+      wsConnected = false;
+      // Reconnect after 5s if not intentional
+      setTimeout(() => { if (!wsConnected) connectBinanceWS(); }, 5000);
+    };
+  } catch(e) {
+    console.warn('WS init failed:', e.message);
+    fallbackFetchPrices();
+  }
+}
+
+async function fallbackFetchPrices() {
+  const sources = [
+    // Coinbase — genuinely CORS-open, no key
+    async () => {
+      const [b, e] = await Promise.all([
+        fetch('https://api.coinbase.com/v2/prices/BTC-USD/spot', { mode: 'cors' }),
+        fetch('https://api.coinbase.com/v2/prices/ETH-USD/spot', { mode: 'cors' }),
+      ]);
+      if (!b.ok || !e.ok) throw new Error('coinbase fail');
+      const [bd, ed] = await Promise.all([b.json(), e.json()]);
+      return {
+        BTC: { price: parseFloat(bd.data.amount), change: 0 },
+        ETH: { price: parseFloat(ed.data.amount), change: 0 },
+      };
+    },
+    // CoinGecko public (no key) — works in most browsers
+    async () => {
+      const r = await fetch(
+        'https://api.coingecko.com/api/v3/simple/price?ids=bitcoin,ethereum&vs_currencies=usd&include_24hr_change=true',
+        { mode: 'cors' }
+      );
+      if (!r.ok) throw new Error('coingecko fail');
+      const d = await r.json();
+      if (!d.bitcoin || !d.ethereum) throw new Error('coingecko bad data');
+      return {
+        BTC: { price: d.bitcoin.usd, change: d.bitcoin.usd_24h_change || 0 },
+        ETH: { price: d.ethereum.usd, change: d.ethereum.usd_24h_change || 0 },
+      };
+    },
+    // Kraken — CORS-open REST
+    async () => {
+      const r = await fetch('https://api.kraken.com/0/public/Ticker?pair=XBTUSD,ETHUSD', { mode: 'cors' });
+      if (!r.ok) throw new Error('kraken fail');
+      const d = await r.json();
+      const btcD = d.result?.XXBTZUSD;
+      const ethD = d.result?.XETHZUSD;
+      if (!btcD || !ethD) throw new Error('kraken bad data');
+      const btcP = parseFloat(btcD.c[0]);
+      const ethP = parseFloat(ethD.c[0]);
+      return {
+        BTC: { price: btcP, change: ((btcP - parseFloat(btcD.o)) / parseFloat(btcD.o)) * 100 },
+        ETH: { price: ethP, change: ((ethP - parseFloat(ethD.o)) / parseFloat(ethD.o)) * 100 },
+      };
+    },
+  ];
+
+  for (const fn of sources) {
+    try {
+      const r = await fn();
+      if (r?.BTC?.price && r?.ETH?.price) {
+        prices.BTC = r.BTC.price;
+        prices.ETH = r.ETH.price;
+        prices.USDT = 1;
+        updateCard('btc', prices.BTC, r.BTC.change);
+        updateCard('eth', prices.ETH, r.ETH.change);
+        updateCard('usdt', 1, 0.01);
+        recalc();
+        console.log('Prices loaded via REST fallback');
+        return;
+      }
+    } catch(e) {
+      console.warn('REST source failed:', e.message);
+    }
+  }
+  console.error('All price sources failed. Check network/CORS.');
+}
+
+// Keep REST fallback polling every 20s if WS isn't connected
+async function fetchBinancePrices() {
+  if (!wsConnected) await fallbackFetchPrices();
+}
+
+// ═══════════════════════════════════════════════════════
+// FETCH USD/NGN — multi-source with Binance USDTNGN
+// ═══════════════════════════════════════════════════════
+async function fetchNgnRate() {
+  const sources = [
+    // 1. Binance USDTNGN pair — most accurate, same API already used
+    async () => {
+      const r = await fetch('https://api.binance.com/api/v3/ticker/price?symbol=USDTNGN');
+      if (!r.ok) throw new Error('no USDTNGN pair');
+      const d = await r.json();
+      const val = parseFloat(d.price);
+      if (val > 100) return val;
+      throw new Error('bad value');
+    },
+    // 2. Frankfurter (ECB data, CORS-open, free, no key)
+    async () => {
+      const r = await fetch('https://api.frankfurter.app/latest?from=USD&to=NGN');
+      if (!r.ok) throw new Error('frankfurter fail');
+      const d = await r.json();
+      const val = d.rates?.NGN;
+      if (val && val > 100) return val;
+      throw new Error('bad value');
+    },
+    // 3. Open Exchange Rates — free tier, CORS-open
+    async () => {
+      const r = await fetch('https://open.er-api.com/v6/latest/USD');
+      if (!r.ok) throw new Error('er-api fail');
+      const d = await r.json();
+      const val = d.rates?.NGN;
+      if (val && val > 100) return val;
+      throw new Error('bad value');
+    },
+    // 4. Fawaz exchange-api — fully CORS open, no key needed
+    async () => {
+      const r = await fetch('https://cdn.jsdelivr.net/npm/@fawazahmed0/currency-api@latest/v1/currencies/usd.json');
+      if (!r.ok) throw new Error('fawaz fail');
+      const d = await r.json();
+      const val = d.usd?.ngn;
+      if (val && val > 100) return val;
+      throw new Error('bad value');
+    },
+  ];
+
+  for (const fn of sources) {
+    try {
+      const rate = await fn();
+      usdNgn = rate;
+      const display = Math.round(usdNgn * CONFIG.rateMarkup).toLocaleString();
+      document.getElementById('rate-display').textContent = `₦${display}`;
+      document.getElementById('rate-updated').textContent = `Updated ${new Date().toLocaleTimeString()}`;
+      updateAllNgn();
+      return;
+    } catch(_) { /* try next source */ }
+  }
+
+  // All sources failed — use hardcoded fallback and flag it
+  document.getElementById('rate-display').textContent = `₦${Math.round(usdNgn * CONFIG.rateMarkup).toLocaleString()} (est.)`;
+  document.getElementById('rate-updated').textContent = `Rate unavailable — using estimate`;
+  updateAllNgn();
+}
+
+function updateAllNgn() {
+  const rate = usdNgn * CONFIG.rateMarkup;
+  if (prices.BTC) document.getElementById('btc-ngn').textContent = `₦${fmt(prices.BTC * rate, 0)}`;
+  if (prices.ETH) document.getElementById('eth-ngn').textContent = `₦${fmt(prices.ETH * rate, 0)}`;
+  document.getElementById('usdt-ngn').textContent = `₦${fmt(1 * rate, 2)}`;
+  recalc();
+}
+
+function updateCard(coin, price, changePct) {
+  const rate = usdNgn * CONFIG.rateMarkup;
+  document.getElementById(`${coin}-usd`).textContent = `$${fmt(price, price < 10 ? 4 : 2)}`;
+  document.getElementById(`${coin}-ngn`).textContent = `₦${fmt(price * rate, 0)}`;
+  const el = document.getElementById(`${coin}-change`);
+  const up = changePct >= 0;
+  el.innerHTML = `<span class="coin-change ${up ? 'up' : 'dn'}">${up ? '+' : ''}${changePct.toFixed(2)}%</span>`;
+}
+
+// ═══════════════════════════════════════════════════════
+// MODE TOGGLE
+// ═══════════════════════════════════════════════════════
+function setMode(mode) {
+  tradeMode = mode;
+  const buyBtn    = document.getElementById('mode-buy');
+  const sellBtn   = document.getElementById('mode-sell');
+  const actionBtn = document.getElementById('action-btn');
+  const buySection  = document.getElementById('buy-section');
+  const sellSection = document.getElementById('sell-section');
+
+  if (mode === 'buy') {
+    buyBtn.className    = 'mode-btn active-buy';
+    sellBtn.className   = 'mode-btn';
+    actionBtn.className = 'btn btn-primary';
+    actionBtn.textContent = 'Proceed to Checkout →';
+    buySection.style.display  = '';
+    sellSection.style.display = 'none';
+    document.getElementById('sum-get-label').textContent = 'You Get';
+    document.getElementById('sum-pay-label').textContent = 'You Pay (NGN)';
+    document.getElementById('amount-label').textContent  = 'Amount in USD';
+  } else {
+    buyBtn.className    = 'mode-btn';
+    sellBtn.className   = 'mode-btn active-sell';
+    actionBtn.className = 'btn btn-sell';
+    actionBtn.textContent = 'Sell Now →';
+    buySection.style.display  = 'none';
+    sellSection.style.display = '';
+    document.getElementById('sum-get-label').textContent = 'You Receive (NGN)';
+    document.getElementById('sum-pay-label').textContent = 'You Send';
+    document.getElementById('amount-label').textContent  = 'Amount in USD';
+    updateOurWalletDisplay();
+  }
+  recalc();
+}
+
+function updateOurWalletDisplay() {
+  const w = OUR_WALLETS[selectedCoin];
+  document.getElementById('our-wallet-addr').textContent = w.address;
+  const coinEl = document.getElementById('our-wallet-coin');
+  coinEl.textContent = selectedCoin;
+  coinEl.className = `wd-coin ${selectedCoin.toLowerCase()}`;
+}
+
+// ═══════════════════════════════════════════════════════
+// COIN SELECTION
+// ═══════════════════════════════════════════════════════
+function selectCoin(coin) {
+  selectedCoin = coin;
+  ['BTC','ETH','USDT'].forEach(c => {
+    const card = document.querySelector(`.price-card.${c.toLowerCase()}`);
+    const tab = document.getElementById(`tab-${c}`);
+    card.classList.remove('selected');
+    tab.className = 'coin-tab';
+    if (c === coin) {
+      card.classList.add('selected');
+      tab.classList.add(`active-${c.toLowerCase()}`);
+    }
+  });
+  if (tradeMode === 'sell') updateOurWalletDisplay();
+  recalc();
+}
+selectCoin('BTC');
+
+// ═══════════════════════════════════════════════════════
+// RECALCULATE SUMMARY
+// ═══════════════════════════════════════════════════════
+function recalc() {
+  const usd = parseFloat(document.getElementById('amount-usd').value) || 0;
+  const rate = usdNgn * CONFIG.rateMarkup;
+  const price = prices[selectedCoin] || 1;
+  const coinAmt = price > 0 ? usd / price : 0;
+  const ngn = usd * rate;
+
+  document.getElementById('sum-coin').textContent = selectedCoin;
+  document.getElementById('sum-rate').textContent = `$${fmt(price, price < 10 ? 4 : 2)} / ${selectedCoin}`;
+
+  if (tradeMode === 'buy') {
+    document.getElementById('sum-get').textContent = coinAmt > 0 ? `${fmt(coinAmt, 6)} ${selectedCoin}` : '—';
+    document.getElementById('sum-pay').textContent = ngn > 0 ? `₦${fmt(ngn, 0)}` : '—';
+  } else {
+    // sell: user sends coin, receives NGN
+    document.getElementById('sum-get').textContent = ngn > 0 ? `₦${fmt(ngn, 0)}` : '—';
+    document.getElementById('sum-pay').textContent = coinAmt > 0 ? `${fmt(coinAmt, 6)} ${selectedCoin}` : '—';
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+// CHECKOUT — routes to buy or sell modal
+// ═══════════════════════════════════════════════════════
+function openCheckout() {
+  if (tradeMode === 'buy') openBuyModal();
+  else openSellModal();
+}
+
+// ── BUY ──
+function openBuyModal() {
+  const name   = document.getElementById('full-name').value.trim();
+  const email  = document.getElementById('email').value.trim();
+  const wallet = document.getElementById('wallet').value.trim();
+  const usd    = parseFloat(document.getElementById('amount-usd').value);
+
+  if (!name)  return showToast('Enter your full name', 'error');
+  if (!email || !email.includes('@')) return showToast('Enter a valid email', 'error');
+  if (!wallet) return showToast('Enter your wallet address', 'error');
+  if (!usd || usd < 10) return showToast('Minimum order is $10', 'error');
+
+  const rate    = usdNgn * CONFIG.rateMarkup;
+  const price   = prices[selectedCoin] || 1;
+  const coinAmt = usd / price;
+  const ngn     = usd * rate;
+
+  document.getElementById('pay-amount').textContent  = `₦${fmt(ngn, 0)}`;
+  document.getElementById('pay-usd').textContent     = `≈ $${fmt(usd, 2)} USD · ${fmt(coinAmt, 6)} ${selectedCoin}`;
+  document.getElementById('modal-sub').textContent   = `Buying ${fmt(coinAmt, 6)} ${selectedCoin} for ₦${fmt(ngn, 0)}`;
+  document.getElementById('modal-overlay').classList.add('open');
+}
+
+function closeModal() {
+  document.getElementById('modal-overlay').classList.remove('open');
+}
+function handleOverlayClick(e) {
+  if (e.target === document.getElementById('modal-overlay')) closeModal();
+}
+
+async function confirmOrder() {
+  const btn = document.getElementById('confirm-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Saving…';
+
+  const name   = document.getElementById('full-name').value.trim();
+  const email  = document.getElementById('email').value.trim();
+  const wallet = document.getElementById('wallet').value.trim();
+  const usd    = parseFloat(document.getElementById('amount-usd').value);
+  const rate   = usdNgn * CONFIG.rateMarkup;
+  const price  = prices[selectedCoin] || 1;
+  const coinAmt = usd / price;
+  const ngn    = usd * rate;
+
+  const order = {
+    id: 'ORD-' + Date.now(), type: 'buy',
+    coin: selectedCoin, amountUsd: usd, amountNgn: ngn,
+    coinAmount: coinAmt, coinPrice: price,
+    wallet, name, email, status: 'pending',
+    createdAt: new Date().toISOString(),
+  };
+  currentOrderId = order.id;
+  await saveToSupabase(order);
+  await notifySlack(order);
+  orders.unshift(order);
+  localStorage.setItem('sc_orders', JSON.stringify(orders.slice(0, 50)));
+  renderOrders();
+
+  btn.disabled = false;
+  btn.innerHTML = "I've Made the Transfer ✓";
+  closeModal();
+  showToast('Buy order submitted! Status: PENDING', 'success');
+  resetForm();
+}
+
+// ── SELL ──
+function openSellModal() {
+  const name     = document.getElementById('full-name').value.trim();
+  const email    = document.getElementById('email').value.trim();
+  const bankName = document.getElementById('sell-bank-name').value.trim();
+  const acctNum  = document.getElementById('sell-acct-num').value.trim();
+  const acctName = document.getElementById('sell-acct-name').value.trim();
+  const usd      = parseFloat(document.getElementById('amount-usd').value);
+
+  if (!name)  return showToast('Enter your full name', 'error');
+  if (!email || !email.includes('@')) return showToast('Enter a valid email', 'error');
+  if (!bankName) return showToast('Enter your bank name', 'error');
+  if (!acctNum || acctNum.length < 10) return showToast('Enter a valid account number', 'error');
+  if (!acctName) return showToast('Enter your account name', 'error');
+  if (!usd || usd < 10) return showToast('Minimum sell is $10', 'error');
+
+  const rate    = usdNgn * CONFIG.rateMarkup;
+  const price   = prices[selectedCoin] || 1;
+  const coinAmt = usd / price;
+  const ngn     = usd * rate;
+  const w       = OUR_WALLETS[selectedCoin];
+
+  document.getElementById('sell-receive-amount').textContent = `₦${fmt(ngn, 0)}`;
+  document.getElementById('sell-receive-sub').textContent    = `≈ $${fmt(usd, 2)} USD · Send ${fmt(coinAmt, 6)} ${selectedCoin}`;
+  document.getElementById('sell-modal-sub').textContent      = `Selling ${fmt(coinAmt, 6)} ${selectedCoin}`;
+  document.getElementById('sell-network').textContent        = w.network;
+  document.getElementById('sell-wallet-display').textContent = w.address;
+  document.getElementById('sell-payout-bank').textContent   = bankName;
+  document.getElementById('sell-payout-acct').textContent   = acctNum;
+  document.getElementById('sell-payout-name').textContent   = acctName;
+  document.getElementById('sell-modal-overlay').classList.add('open');
+}
+
+function closeSellModal() {
+  document.getElementById('sell-modal-overlay').classList.remove('open');
+}
+function handleSellOverlayClick(e) {
+  if (e.target === document.getElementById('sell-modal-overlay')) closeSellModal();
+}
+
+async function confirmSellOrder() {
+  const btn = document.getElementById('sell-confirm-btn');
+  btn.disabled = true;
+  btn.innerHTML = '<span class="spinner"></span> Saving…';
+
+  const name     = document.getElementById('full-name').value.trim();
+  const email    = document.getElementById('email').value.trim();
+  const bankName = document.getElementById('sell-bank-name').value.trim();
+  const acctNum  = document.getElementById('sell-acct-num').value.trim();
+  const acctName = document.getElementById('sell-acct-name').value.trim();
+  const usd      = parseFloat(document.getElementById('amount-usd').value);
+  const rate     = usdNgn * CONFIG.rateMarkup;
+  const price    = prices[selectedCoin] || 1;
+  const coinAmt  = usd / price;
+  const ngn      = usd * rate;
+  const w        = OUR_WALLETS[selectedCoin];
+
+  const order = {
+    id: 'SELL-' + Date.now(), type: 'sell',
+    coin: selectedCoin, amountUsd: usd, amountNgn: ngn,
+    coinAmount: coinAmt, coinPrice: price,
+    wallet: w.address,
+    payoutBank: bankName, payoutAcct: acctNum, payoutName: acctName,
+    name, email, status: 'pending',
+    createdAt: new Date().toISOString(),
+  };
+  currentOrderId = order.id;
+  await saveToSupabase(order);
+  await notifySlack(order);
+  orders.unshift(order);
+  localStorage.setItem('sc_orders', JSON.stringify(orders.slice(0, 50)));
+  renderOrders();
+
+  btn.disabled = false;
+  btn.innerHTML = "I've Sent the Crypto ✓";
+  closeSellModal();
+  showToast('Sell order submitted! Status: PENDING', 'success');
+  resetForm();
+}
+
+function resetForm() {
+  document.getElementById('full-name').value = '';
+  document.getElementById('email').value = '';
+  document.getElementById('wallet').value = '';
+  document.getElementById('sell-bank-name').value = '';
+  document.getElementById('sell-acct-num').value = '';
+  document.getElementById('sell-acct-name').value = '';
+  document.getElementById('amount-usd').value = '';
+  recalc();
+}
+
+// ═══════════════════════════════════════════════════════
+// SUPABASE
+// ═══════════════════════════════════════════════════════
+async function saveToSupabase(order) {
+  if (!CONFIG.supabase.url || CONFIG.supabase.url === 'YOUR_SUPABASE_URL') {
+    console.log('Supabase not configured. Order (local only):', order);
+    return;
+  }
+  try {
+    const res = await fetch(`${CONFIG.supabase.url}/rest/v1/orders`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'apikey': CONFIG.supabase.anonKey,
+        'Authorization': `Bearer ${CONFIG.supabase.anonKey}`,
+        'Prefer': 'return=minimal',
+      },
+      body: JSON.stringify({
+        order_id: order.id,
+        coin: order.coin,
+        amount_usd: order.amountUsd,
+        amount_ngn: order.amountNgn,
+        coin_amount: order.coinAmount,
+        coin_price: order.coinPrice,
+        wallet_address: order.wallet,
+        customer_name: order.name,
+        customer_email: order.email,
+        status: 'pending',
+        created_at: order.createdAt,
+      }),
+    });
+    if (!res.ok) console.warn('Supabase save failed:', await res.text());
+  } catch(e) {
+    console.warn('Supabase error:', e.message);
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+// SLACK
+// ═══════════════════════════════════════════════════════
+async function notifySlack(order) {
+  if (!CONFIG.slack.webhookUrl || CONFIG.slack.webhookUrl === 'YOUR_SLACK_WEBHOOK_URL') {
+    console.log('Slack not configured. Notification skipped.');
+    return;
+  }
+  try {
+    const isSell = order.type === 'sell';
+    const emoji = isSell ? '💸' : '🔔';
+    const fields = isSell ? [
+      { type: 'mrkdwn', text: `*Type:*\n🔴 SELL` },
+      { type: 'mrkdwn', text: `*Coin:*\n${order.coin}` },
+      { type: 'mrkdwn', text: `*Coin Amount:*\n${fmt(order.coinAmount, 6)} ${order.coin}` },
+      { type: 'mrkdwn', text: `*USD Value:*\n$${fmt(order.amountUsd, 2)}` },
+      { type: 'mrkdwn', text: `*NGN Payout:*\n₦${fmt(order.amountNgn, 0)}` },
+      { type: 'mrkdwn', text: `*Customer:*\n${order.name}` },
+      { type: 'mrkdwn', text: `*Email:*\n${order.email}` },
+      { type: 'mrkdwn', text: `*Payout Bank:*\n${order.payoutBank}` },
+      { type: 'mrkdwn', text: `*Payout Acct:*\n${order.payoutAcct} (${order.payoutName})` },
+      { type: 'mrkdwn', text: `*Our Wallet:*\n\`${order.wallet}\`` },
+      { type: 'mrkdwn', text: `*Status:*\n⏳ PENDING` },
+    ] : [
+      { type: 'mrkdwn', text: `*Type:*\n🟢 BUY` },
+      { type: 'mrkdwn', text: `*Coin:*\n${order.coin}` },
+      { type: 'mrkdwn', text: `*Amount:*\n${fmt(order.coinAmount, 6)} ${order.coin}` },
+      { type: 'mrkdwn', text: `*USD Value:*\n$${fmt(order.amountUsd, 2)}` },
+      { type: 'mrkdwn', text: `*NGN to Pay:*\n₦${fmt(order.amountNgn, 0)}` },
+      { type: 'mrkdwn', text: `*Customer:*\n${order.name}` },
+      { type: 'mrkdwn', text: `*Email:*\n${order.email}` },
+      { type: 'mrkdwn', text: `*Their Wallet:*\n\`${order.wallet}\`` },
+      { type: 'mrkdwn', text: `*Status:*\n⏳ PENDING` },
+    ];
+    const msg = {
+      text: `${emoji} *New ${isSell ? 'Sell' : 'Buy'} Order* — ${order.id}`,
+      blocks: [
+        { type: 'header', text: { type: 'plain_text', text: `${emoji} ${isSell ? 'Sell' : 'Buy'} Order: ${order.id}` } },
+        { type: 'section', fields }
+      ]
+    };
+
+    // Slack webhooks don't support CORS from browser.
+    // In production, route through your backend/edge function.
+    // For now we do a no-cors fetch so it still fires even without response.
+    await fetch(CONFIG.slack.webhookUrl, {
+      method: 'POST',
+      mode: 'no-cors',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(msg),
+    });
+  } catch(e) {
+    console.warn('Slack notify error:', e.message);
+  }
+}
+
+// ═══════════════════════════════════════════════════════
+// RENDER ORDERS
+// ═══════════════════════════════════════════════════════
+function renderOrders() {
+  const container = document.getElementById('orders-list');
+  if (!orders.length) {
+    container.innerHTML = `<div class="empty"><div class="empty-icon">📭</div>No orders yet. Make your first trade above!</div>`;
+    return;
+  }
+  container.innerHTML = orders.map(o => `
+    <div class="order-card">
+      <div class="order-top">
+        <div>
+          <div class="order-coin">
+            ${o.coin}
+            <span class="order-type ${o.type === 'sell' ? 'type-sell' : 'type-buy'}">${(o.type || 'buy').toUpperCase()}</span>
+          </div>
+          <div class="order-meta">${o.id} · ${new Date(o.createdAt).toLocaleDateString()}</div>
+        </div>
+        <span class="status-badge status-${o.status === 'confirmed' ? 'success' : 'pending'}">
+          ${o.status === 'confirmed' ? '✓ Confirmed' : '⏳ Pending'}
+        </span>
+      </div>
+      <div style="display:flex;justify-content:space-between;align-items:center">
+        <div class="order-meta">${o.name}</div>
+        <div class="order-amounts">
+          <div class="hi">${fmt(o.coinAmount, 6)} ${o.coin}</div>
+          <div>₦${fmt(o.amountNgn, 0)}</div>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+// ═══════════════════════════════════════════════════════
+// UTILS
+// ═══════════════════════════════════════════════════════
+function fmt(n, dec = 2) {
+  if (!n && n !== 0) return '—';
+  return Number(n).toLocaleString('en-NG', { minimumFractionDigits: dec, maximumFractionDigits: dec });
+}
+
+function copyAcct() {
+  navigator.clipboard.writeText(CONFIG.bank.accountNumber).then(() => {
+    const btn = document.getElementById('copy-acct');
+    btn.textContent = 'Copied!';
+    btn.classList.add('copied');
+    setTimeout(() => { btn.textContent = 'Copy'; btn.classList.remove('copied'); }, 2000);
+  });
+}
+
+function copyOurWallet() {
+  const addr = OUR_WALLETS[selectedCoin].address;
+  navigator.clipboard.writeText(addr).then(() => showToast('Wallet address copied!', 'success'));
+}
+
+function copySellWallet() {
+  const addr = document.getElementById('sell-wallet-display').textContent;
+  navigator.clipboard.writeText(addr).then(() => showToast('Wallet address copied!', 'success'));
+}
+
+let toastTimer;
+function showToast(msg, type = '') {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = `toast ${type} show`;
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('show'), 3000);
+}
+
+// ═══════════════════════════════════════════════════════
+// INIT
+// ═══════════════════════════════════════════════════════
+(async function init() {
+  renderOrders();
+  await fetchNgnRate();
+
+  // Start WebSocket for live prices (no CORS issues)
+  connectBinanceWS();
+
+  // Also do immediate REST fetch in case WS takes a moment
+  await fallbackFetchPrices();
+
+  // Poll REST every 20s as safety net if WS drops
+  setInterval(fetchBinancePrices, 20000);
+  // Refresh NGN rate every 5 minutes
+  setInterval(fetchNgnRate, 5 * 60 * 1000);
+})();
+</script>
+</body>
+</html>
