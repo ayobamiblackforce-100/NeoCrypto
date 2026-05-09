@@ -1,0 +1,14 @@
+server {
+    listen 80;
+    listen [::]:80;
+    server_name neoteric.naija.ee;
+
+    # Optional: Log files for troubleshooting
+    access_log /var/log/nginx/neoteric.naija.eem.access.log;
+    error_log /var/log/nginx/neoteric.naija.ee.error.log;
+
+    location / {
+        root /var/www/neoteric.naija.ee/;
+        index index.html;
+    }
+}
